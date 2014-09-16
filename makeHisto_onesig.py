@@ -1,14 +1,13 @@
 #!/usr/bin/python
 
 import sys
-from ROOT import TH1D,THStack,TFile,TCanvas,TLegend,kRed,kOrange,kBlue,kCyan,kGreen,kMagenta,TLine,TLatex,kYellow
+from ROOT import TH1D,THStack,TFile,TCanvas,TLegend,kSpring,kBlack,kAzure,kRed,kOrange,kBlue,kCyan,kGreen,kViolet,kPink,TLine,TLatex,kYellow
 #from ROOT import TH1D,THStack,TFile,TCanvas,TLegend,kRed,kOrange,kBlue,kCyan
 
-dirName='September5_30GeV20GeVveto'
-f = TFile(dirName+"/"+dirName+"_plots_stoc.root", "recreate")
+dirName='September15_noHTcut'
+f = TFile(dirName+"/"+dirName+"_plots_signonly.root", "recreate")
 
-global h_stc,h_nm1,h_nm2,h_nm3,h_stcBkd,h_nm1Bkd,h_nm2Bkd,h_nm3Bkd
-
+global h_stc,h_stoc,h_nm1,h_nm2,h_nm3,h_stcBkd,h_nm1Bkd,h_nm2Bkd,h_nm3Bkd,h_all,h_stop ,h_sbot,h_glui,h_squarkglui
 def get(file,what,Lfac,lineCol,lineWid,lineSty,fillCol,reb=0):
 	
 	h = file.Get(what)
@@ -17,21 +16,26 @@ def get(file,what,Lfac,lineCol,lineWid,lineSty,fillCol,reb=0):
 	h.SetLineStyle(lineSty)
 	h.SetFillColor(fillCol)
 	h.Scale(Lfac)
-	if reb==1: h.Rebin()
+	if reb!=0: h.Rebin(reb)
 	return h.Clone()
 
-def plot(ana,histos,h_legend,minY,maxY,minX,maxX,whatX,whatY,c1=0,all=1):
+def plot(signame,histos,h_legend,minY,maxY,minX,maxX,whatX,whatY,what,c1=0,all=1,logy=1):
 	global stack,leg,dum
 	print ana
 	#prepare the layou
 	if c1==0:
 		c1=TCanvas('c1','',800,600)
-	c1.SetLogy() 
+        c1.SetLogy(logy) 
 	dum = h_ttbar.Clone()
 	dum.Reset()
 	dum.SetMinimum(minY)
 	dum.SetMaximum(maxY)
 	dum.GetXaxis().SetRangeUser(minX,maxX)
+	dum.GetXaxis().SetTitleSize(0.05)
+	dum.GetYaxis().SetTitleSize(0.05)
+        dum.GetXaxis().SetTitleOffset(0.85)
+        dum.GetYaxis().SetTitleOffset(0.85)
+
 	dum.SetXTitle(whatX)
 	dum.SetYTitle(whatY)
 	dum.SetTitle('')
@@ -56,29 +60,21 @@ def plot(ana,histos,h_legend,minY,maxY,minX,maxX,whatX,whatY,c1=0,all=1):
 
 	leg = TLegend(0.63,0.525,0.87,0.875) #for 33 TeV (0.65,0.65,0.9,0.9)
         leg.SetBorderSize(1)
-        leg.SetTextSize(0.025)
+        leg.SetTextFont(62)
+        leg.SetTextSize(0.03)
         leg.SetLineColor(0)
         leg.SetLineStyle(1)
         leg.SetLineWidth(1)
         leg.SetFillColor(0)
         leg.SetFillStyle(1001)
-	##if whatX=='MT2W': leg = TLegend(0.55,0.5,0.87,0.9)
-	leg.SetFillColor(0)
-	leg.SetLineColor(0)
 
-
-	leg.AddEntry(h_stc,'STOC','l')
-	#leg.AddEntry(h_nm1,'NM1','l')
-	#leg.AddEntry(h_nm2,'NM2','l')
-	#leg.AddEntry(h_nm3,'NM3','l')
-	#leg.AddEntry(h_stc_stoponly,'stc only stop','l')
-	#leg.AddEntry(h_nm1_stoponly,'natural model 1 only stop','l')
-	#leg.AddEntry(h_nm2_stoponly,'natural model 2 only stop','l')
-	#leg.AddEntry(h_nm3_stoponly,'natural model 3 only stop','l')
-	if pu== 'NoPU': leg.SetHeader('no pileup')
-	if pu== '50PU': leg.SetHeader('pileup: 50')
-	if pu=='140PU': leg.SetHeader('pileup: 140')
-	if all:
+        leg.SetHeader('Model: '+signame)
+	leg.AddEntry(h_all,'All','l')
+	leg.AddEntry(h_stop,'#tilde{t}_{1}#tilde{t}_{1}','l')
+	leg.AddEntry(h_sbot,'#tilde{b}_{1}#tilde{b}_{1}','l')
+	leg.AddEntry(h_glui,'#tilde{g}#tilde{g}','l')
+	leg.AddEntry(h_squarkglui,'#tilde{q}#tilde{g}','l')
+	if all == 1:
 		# bgrd stack
 		stack = THStack('stack','')
 		N=len(histos)
@@ -90,24 +86,57 @@ def plot(ana,histos,h_legend,minY,maxY,minX,maxX,whatX,whatY,c1=0,all=1):
 			t=h_legend[h]
 			leg.AddEntry(h,t,'f')
 		# draw bgrds + signals
-		stack.Draw('samehist')
+                stack.Draw('samehist')
 
-	h_stc.Draw('samehist')
-	#h_nm1.Draw('samehist')
-	#h_nm2.Draw('samehist')
-	#h_nm3.Draw('samehist')
+                h_all.Draw('samehist')
+                h_stop.Draw('samehist')
+                h_sbot.Draw('samehist')
+                h_glui.Draw('samehist')
+                h_squarkglui.Draw('samehist')
+                
+                
+                leg.Draw()
+                c1.RedrawAxis()
+                c1.SetName(tev+'_'+pu+'_'+what+'_'+signame+'_notstacked')
+                #c1.SaveAs(dirName+'/'+tev+'_'+pu+'_'+what+'_'+ana+'.pdf')
+                f.cd()
+                c1.Write()
+	if all == 2:
+		# bgrd stack
+		stack = THStack('stack','')
+		N=len(histos)
+		for i in range(N):
+			h=histos[i][0]
+			stack.Add(h)
+		for i in range(N-1,-1,-1):
+			h=histos[i][0]
+			t=h_legend[h]
+			leg.AddEntry(h,t,'f')
+		# draw bgrds + signal
+                stack.Add(h_squarkglui)
+                stack.Add(h_sbot)
+                stack.Add(h_stop)
+                stack.Add(h_glui)
 
-	#h_stc_stoponly.Draw('samehist')
-	#h_nm1_stoponly.Draw('samehist')
-	#h_nm2_stoponly.Draw('samehist')
-	#h_nm3_stoponly.Draw('samehist')
 
-	leg.Draw()
-	c1.RedrawAxis()
-	c1.SetName(tev+'_'+pu+'_'+what+'_'+ana)
-	#c1.SaveAs(dirName+'/'+tev+'_'+pu+'_'+what+'_'+ana+'.pdf')
-	f.cd()
-	c1.Write()
+
+
+        
+                stack_all = THStack('stack_all','')
+		N=len(histos)
+		for i in range(N):
+			h=histos[i][0]
+			stack_all.Add(h)
+		# draw bgrds + signals
+                stack_all.Add(h_all)
+                stack_all.Draw('samehist')
+                stack.Draw('samehist')        
+                leg.Draw()
+                c1.RedrawAxis()
+                c1.SetName(tev+'_'+pu+'_'+what+'_'+signame+'_stacked')
+                #c1.SaveAs(dirName+'/'+tev+'_'+pu+'_'+what+'_'+ana+'.pdf')
+                f.cd()
+                c1.Write()
 
 
 
@@ -131,11 +160,11 @@ c1=TCanvas('c1','',800,600)
 ########## preselection
 quantity=['HT','0JetpT','1JetpT','2JetpT','3JetpT','nJet','nBJet','nMu','nEl','nLep','LeppT','Central','RawMET','dPhi','mT','mT2W']
 
-label=['H_{T} [GeV]','0JetpT','1JetpT','2JetpT','3JetpT',
+label=['H_{T} (GeV)','0JetpT','1JetpT','2JetpT','3JetpT',
 	  'Number of jets','Number of b-jets','nMu','nEl',
-	  'Number of leptons','Leading lepton p_{T} [GeV]',
-	  'Centrality','E_{T}^{miss} [GeV]',
-	  'min ( #Delta #phi(j_{1},E_{T}^{miss}),  #Delta #phi(j_{1},E_{T}^{miss}))','M_{T} [GeV]','M^{W}_{T2} [GeV]']
+	  'Number of leptons','Leading lepton p_{T} (GeV)',
+	  'Centrality','E_{T}^{miss} (GeV)',
+	  'min ( #Delta #phi(j_{1},E_{T}^{miss}),#Delta #phi(j_{1},E_{T}^{miss}))','M_{T} (GeV)','M^{W}_{T2} (GeV)']
 
 ymax=[4000,2000,2000,2000,2000,20,20,10,10,10,1000,1,1500,3.2,700,500]
 
@@ -156,8 +185,15 @@ cutsShort=["noCut","1lep_noclean","addlepveto_noclean", "trackveto_clean",
 	   "nm_gluinos_MET400_HT1000","nm_gluinos_MET400_HT1400", "nm_gluinos_MET400_HT1700",
 	   "nm_gluinos_MET600_HT1000","nm_gluinos_MET600_HT1400", "nm_gluinos_MET600_HT1700",
 	   "nm_gluinos_MET800_HT1000", "nm_gluinos_MET800_HT1400", "nm_gluinos_MET800_HT1700"]
+#n-1 plots
+quantity_N1 =["HT_N1_stc","nJet_N1_stc","nBJet_N1_stc","Central_N1_stc","RawMET_N1_stc",
+              "dPhi_N1_stc","mT_N1_stc","mT2W_N1_stc"]
 
-
+lable_N1 =["H_{T} (GeV)","Number of jets","Number of b-jets","Centrality","E_{T}^{Miss} (GeV)",
+           "min( #Delta #phi(j_{1},E_{T}^{miss}),#Delta #phi(j_{2},E_{T}^{miss}))",
+           "M_{T} (GeV)","M^{W}_{T2} (GeV)"]
+xmax_N1 =[4000,20,10,1,2000,3.2,1000,500]
+bin_N1 =['60 GeV','1','1','0.02','40 GeV','0.08','20 GeV','10 GeV']
 
 l=0
 
@@ -165,55 +201,85 @@ file_TTbar = TFile.Open(base+pu+'_TTbar_his.root')
 file_BosonJets = TFile.Open(base+pu+'_BosonJets_his.root')
 file_TopJets = TFile.Open(base+pu+'_TopJets_his.root')
 file_DiBoson = TFile.Open(base+pu+'_DiBoson_his.root')
-file_STC = TFile.Open(base+pu+'_STOC_his.root')
-file_NM1 = TFile.Open(base+pu+'_NM1_his.root')
-file_NM2 = TFile.Open(base+pu+'_NM2_his.root')
-file_NM3 = TFile.Open(base+pu+'_NM3_his.root')
 
-#file_STC_stoponly = TFile.Open(base+pu+'_STCfirst_his_stoponly.root')
-#file_NM1_stoponly = TFile.Open(base+pu+'_NM1_his_stoponly.root')
-#file_NM2_stoponly = TFile.Open(base+pu+'_NM2_his_stoponly.root')
-#file_NM3_stoponly = TFile.Open(base+pu+'_NM3_his_stoponly.root')
-reb = 1
-for what in quantity:
-	for k in range (0,26):
-		if what == 'nLep' or what == 'nJet' or what == 'nBJet' or what == 'nEl' or what == 'nMu':
-			reb = 0
-		print what+'_'+str(k)
-		h_ttbar = get(file_TTbar, what+'_'+str(k),Lfac,1,1,1,kBlue,reb)
-		h_bjets = get(file_BosonJets, what+'_'+str(k),Lfac,1,1,1,kOrange,reb)
-		h_tjets = get(file_TopJets, what+'_'+str(k),Lfac,1,1,1,kCyan,reb)
-		h_dibos = get(file_DiBoson, what+'_'+str(k),Lfac,1,1,1,kRed,reb)
-		h_stc  = get(file_STC, what+'_'+str(k),Lfac,kMagenta-2,2,1,0,reb)
-		h_nm1  = get(file_NM1, what+'_'+str(k),Lfac,6,2,1,0,reb)
-		h_nm2  = get(file_NM2, what+'_'+str(k),Lfac,1,2,1,0,reb)
-		h_nm3  = get(file_NM3, what+'_'+str(k),Lfac,8,2,1,0,reb)
+file_STOC = [TFile.Open(base+pu+'_STOC_his.root')]
 
-		#h_stc_stoponly  = get(file_STC_stoponly, what+'_'+str(k),Lfac,9,2,2,0,0)
-		#h_nm1_stoponly  = get(file_NM1_stoponly, what+'_'+str(k),Lfac,6,2,2,0,0)
-		#h_nm2_stoponly  = get(file_NM2_stoponly, what+'_'+str(k),Lfac,1,2,2,0,0)
-		#h_nm3_stoponly  = get(file_NM3_stoponly, what+'_'+str(k),Lfac,8,2,2,0,0)
-		
-		
-		# fill the bgrd stack - smallest first
-		h_ent={}
-		h_leg={} # entries in legend
-		# bgrds
-		h_ent[h_ttbar]=h_ttbar.Integral(0,5000)
-		h_leg[h_ttbar]='t#bar{t} + jets'
-		#
-		h_ent[h_bjets]=h_bjets.Integral(0,5000)
-		h_leg[h_bjets]='W,Z + jets'
-		#
-		h_ent[h_tjets]=h_tjets.Integral(0,5000)
-		h_leg[h_tjets]='single top + jets'
-		h_ent[h_dibos]=h_dibos.Integral(0,5000)
-		h_leg[h_dibos]='Diboson'
-		max = h_ttbar.GetMaximum()+h_bjets.GetMaximum()+h_tjets.GetMaximum()+h_dibos.GetMaximum()+h_ttbar.GetMaximum()
-		import operator
-		sorted_h = sorted(h_ent.iteritems(), key=operator.itemgetter(1))
-		
-		#plot(cutsShort[k]+'_'+str(k),sorted_h,h_leg,0.1,max,0,ymax[l],'selection: '+cuts[k]+'               '+what,'evts / bin',c1,1)
-		plot(cutsShort[k]+'_'+str(k),sorted_h,h_leg,0.1,max,0,ymax[l],label[l],'evts / bin',c1,1)
+file_STC = [  TFile.Open(base+pu+'_STCfirst_his.root'),
+              TFile.Open(base+pu+'_STCfirst_his_stoponly.root'), 
+              TFile.Open(base+pu+'_STCfirst_his_sbotonly.root'), 
+              TFile.Open(base+pu+'_STCfirst_his_gluionly.root'), 
+              TFile.Open(base+pu+'_STCfirst_his_squarkgluionly.root')]
+
+file_NM1 = [  TFile.Open(base+pu+'_NM1_his.root'),
+              TFile.Open(base+pu+'_NM1_his_stoponly.root'), 
+              TFile.Open(base+pu+'_NM1_his_sbotonly.root'), 
+              TFile.Open(base+pu+'_NM1_his_gluionly.root'), 
+              TFile.Open(base+pu+'_NM1_his_squarkgluionly.root')]
+
+file_NM2 = [  TFile.Open(base+pu+'_NM2_his.root'),
+              TFile.Open(base+pu+'_NM2_his_stoponly.root'), 
+              TFile.Open(base+pu+'_NM2_his_sbotonly.root'), 
+              TFile.Open(base+pu+'_NM2_his_gluionly.root'), 
+              TFile.Open(base+pu+'_NM2_his_squarkgluionly.root')]
+
+file_NM3 = [  TFile.Open(base+pu+'_NM3_his.root'),
+              TFile.Open(base+pu+'_NM3_his_stoponly.root'), 
+              TFile.Open(base+pu+'_NM3_his_sbotonly.root'), 
+              TFile.Open(base+pu+'_NM3_his_gluionly.root'), 
+              TFile.Open(base+pu+'_NM3_his_squarkgluionly.root')]
+
+signames = ['STC','NM1','NM2','NM3']
+signalfiles = [file_STC,file_NM1,file_NM2,file_NM3]
+
+
+file_dummy = TFile.Open(base+pu+'_NM3_his.root')
+
+
+for what in quantity_N1:
+	print what
+	reb=2
+        logy = 1
+	if what == 'nJet_N1_stc' or what == 'nBJet_N1_stc' or what == 'mT2W_N1_stc':
+		reb = 0
+        if what == 'dPhi_N1_stc' or  what == 'nJet_N1_stc' or what == 'nBJet_N1_stc' or what == 'Central_N1_stc' :
+                logy = 0
+	if what == 'HT_N1_stc' :
+                reb = 3
+	print logy
+        h_ttbar = get(file_TTbar, what,Lfac,1,1,1,kAzure-4,reb)
+        h_bjets = get(file_BosonJets, what,Lfac,1,1,1,kViolet+5,reb)
+        h_tjets = get(file_TopJets, what,Lfac,1,1,1,kCyan-6,reb)
+        h_dibos = get(file_DiBoson, what,Lfac,1,1,1,kPink+3,reb)
+
+	# fill the bgrd stack - smallest first
+	h_ent={}
+	h_leg={} # entries in legend
+	# bgrds
+	h_ent[h_ttbar]=h_ttbar.Integral(0,5000)
+	h_leg[h_ttbar]='t#bar{t} + jets'
+	#
+	h_ent[h_bjets]=h_bjets.Integral(0,5000)
+	h_leg[h_bjets]='W/Z + jets'
+	#
+	h_ent[h_tjets]=h_tjets.Integral(0,5000)
+	h_leg[h_tjets]='Single top + jets'
+	h_ent[h_dibos]=h_dibos.Integral(0,5000)
+	h_leg[h_dibos]='Diboson'
+	max = h_ttbar.GetMaximum()+h_bjets.GetMaximum()+h_tjets.GetMaximum()+h_dibos.GetMaximum()+h_ttbar.GetMaximum()+100
+	import operator
+	sorted_h = sorted(h_ent.iteritems(), key=operator.itemgetter(1))
+        
+        k=0
+        for signal in signalfiles:
+             h_all  = get(signal[0], what,Lfac,kBlack,2,1,0,reb)
+             h_stop  = get(signal[1], what,Lfac,kRed,2,1,0,reb)
+             h_sbot  = get(signal[2], what,Lfac,kBlue,2,1,0,reb)
+             h_glui  = get(signal[3], what,Lfac,kGreen,2,1,0,reb)
+             h_squarkglui  = get(signal[4], what,Lfac,kOrange,2,1,0,reb)
+             
+             plot(signames[k],sorted_h,h_leg,0.1,max,0,xmax_N1[l],lable_N1[l],'Number of events / '+bin_N1[l],what,c1,1,logy)
+             plot(signames[k],sorted_h,h_leg,0.1,max,0,xmax_N1[l],lable_N1[l],'Number of events / '+bin_N1[l],what,c1,2,logy)
+             k=k+1
 	l=l+1
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
+	
+	#--------------------------------------------------------------------------------------------------------------------------------------------------------

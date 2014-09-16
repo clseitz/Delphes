@@ -213,7 +213,7 @@ for what in quantity:
 		h_leg[h_bjets]='W/Z + jets'
 		#
 		h_ent[h_tjets]=h_tjets.Integral(0,5000)
-		h_leg[h_tjets]='single top + jets'
+		h_leg[h_tjets]='Single top + jets'
 		h_ent[h_dibos]=h_dibos.Integral(0,5000)
 		h_leg[h_dibos]='Diboson'
 		max = h_ttbar.GetMaximum()+h_bjets.GetMaximum()+h_tjets.GetMaximum()+h_dibos.GetMaximum()+h_ttbar.GetMaximum()
