@@ -6,7 +6,7 @@ from ROOT import RooStats
 # sample names according to: base/base_tag_sample.txt
 #
 ##for tuning
-samples =['DiBoson','TTbar','BosonJets','TopJets','STCfirst','NM1','NM2','NM3']
+samples =['DiBoson','TTbar','BosonJets','TopJets','STCfirst','STOC','NM1','NM2','NM3']
 
 
 # we print a table without the last n lines
@@ -22,7 +22,7 @@ def Cutflow(path,base,tag,sys1,sys2,n,pick=[]):
 		file.close
 	N=len(linesList[0])-n
 	print base
-	print ('%12s '+9*'%11s ') % (tag,'dibos','ttbar','B+jets','single t','sum bgrds','STC','NM1','NM2','NM3')
+	print ('%12s '+10*'%11s ') % (tag,'dibos','ttbar','B+jets','single t','sum bgrds','STC','STOC','NM1','NM2','NM3')
 	for i in range(2,N):
 		if len(pick)>0 and not i in pick: continue
 		d=[] # data
@@ -33,7 +33,7 @@ def Cutflow(path,base,tag,sys1,sys2,n,pick=[]):
 		what=linesList[0][i].split('\t')[0][7:]
 
 		nbgrd=d[0]+d[1]+d[2]+d[3]
-		print ('%2i: %12s '+9*'%10i ') % ( i,what,d[0],d[1],d[2],d[3],nbgrd,d[4],d[5],d[6],d[7])
+		print ('%2i: %12s '+10*'%10i ') % ( i,what,d[0],d[1],d[2],d[3],nbgrd,d[4],d[5],d[6],d[7],d[8])
 
 		a=sqrt(nbgrd)
 		b=sqrt(nbgrd*(1+sys1*sys1*nbgrd))
@@ -42,18 +42,21 @@ def Cutflow(path,base,tag,sys1,sys2,n,pick=[]):
 		a5sys1 = RooStats.NumberCountingUtils.BinomialObsZ(nbgrd+d[5],nbgrd,sys1)
 		a6sys1 = RooStats.NumberCountingUtils.BinomialObsZ(nbgrd+d[6],nbgrd,sys1)
 		a7sys1 = RooStats.NumberCountingUtils.BinomialObsZ(nbgrd+d[7],nbgrd,sys1)
+		a8sys1 = RooStats.NumberCountingUtils.BinomialObsZ(nbgrd+d[8],nbgrd,sys1)
+		
 		a4sys2 = RooStats.NumberCountingUtils.BinomialObsZ(nbgrd+d[4],nbgrd,sys2)
 		a5sys2 = RooStats.NumberCountingUtils.BinomialObsZ(nbgrd+d[5],nbgrd,sys2)
 		a6sys2 = RooStats.NumberCountingUtils.BinomialObsZ(nbgrd+d[6],nbgrd,sys2)
-		a7sys2 = RooStats.NumberCountingUtils.BinomialObsZ(nbgrd+d[7],nbgrd,sys2) 
+		a7sys2 = RooStats.NumberCountingUtils.BinomialObsZ(nbgrd+d[7],nbgrd,sys2)
+		a8sys2 = RooStats.NumberCountingUtils.BinomialObsZ(nbgrd+d[8],nbgrd,sys2) 
                 #print ('%19s '+48*' '+4*'%12f ') % ( 's/sqrt(b+('+str(sys1)+'*b)^2)',d[4]/b,d[5]/b,d[6]/b,d[7]/b )
 		#print ('%19s '+48*' '+4*'%12f ') % ( 's/sqrt(b+('+str(sys2)+'*b)^2)',d[4]/c,d[5]/c,d[6]/c,d[7]/c )
-		print ('%19s '+48*' '+4*'%12f ') % ( str(sys1),a4sys1,a5sys1,a6sys1,a7sys1 )
-		print ('%19s '+48*' '+4*'%12f ') % ( str(sys2),a4sys2,a5sys2,a6sys2,a7sys2 )
+		print ('%19s '+48*' '+5*'%12f ') % ( str(sys1),a4sys1,a5sys1,a6sys1,a7sys1,a8sys1 )
+		print ('%19s '+48*' '+5*'%12f ') % ( str(sys2),a4sys2,a5sys2,a6sys2,a7sys2,a8sys2 )
         print		
 
 
-Cutflow('September9_final','SingleS_P+DelphMET','140PU',0.15,0.25,1)
+Cutflow('September15_noHTcut','SingleS_P+DelphMET','140PU',0.15,0.25,1)
 
 
 print RooStats.NumberCountingUtils.BinomialObsZ(321+121,121,0.5)
@@ -64,4 +67,9 @@ print RooStats.NumberCountingUtils.BinomialObsZ(166+45,45,0.5)
 
 print RooStats.NumberCountingUtils.BinomialObsZ(379+42,42,0.5)
 print RooStats.NumberCountingUtils.BinomialObsZ(337+391,337,0.15)
-
+print 'STOC'
+print RooStats.NumberCountingUtils.BinomialObsZ(299+61,299,0.25)
+print RooStats.NumberCountingUtils.BinomialObsZ(299+61,299,0.15)
+print 'STOC'
+print RooStats.NumberCountingUtils.BinomialObsZ(20+39,20,0.25)
+print RooStats.NumberCountingUtils.BinomialObsZ(20+39,20,0.15)
