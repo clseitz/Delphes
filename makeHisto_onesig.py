@@ -1,13 +1,16 @@
 #!/usr/bin/python
 
 import sys
-from ROOT import TH1D,THStack,TFile,TCanvas,TLegend,kSpring,kBlack,kAzure,kRed,kOrange,kBlue,kCyan,kGreen,kViolet,kPink,TLine,TLatex,kYellow
-#from ROOT import TH1D,THStack,TFile,TCanvas,TLegend,kRed,kOrange,kBlue,kCyan
+from ROOT import *
+gROOT.LoadMacro("tdrstyle.C")
+setTDRStyle()
 
-dirName='September15_noHTcut'
-f = TFile(dirName+"/"+dirName+"_plots_signonly.root", "recreate")
+gROOT.LoadMacro("CMS_lumi_v2.C")
 
-global h_stc,h_stoc,h_nm1,h_nm2,h_nm3,h_stcBkd,h_nm1Bkd,h_nm2Bkd,h_nm3Bkd,h_all,h_stop ,h_sbot,h_glui,h_squarkglui
+dirName='September18'
+f = TFile(dirName+"/"+dirName+"_plots_sigseparate.root", "recreate")
+
+global h_stc,h_stoc,h_nm1,h_nm2,h_nm3,h_stcBkd,h_nm1Bkd,h_nm2Bkd,h_nm3Bkd,h_all,h_stop ,h_sbot,h_glui,h_squarkglui,h_squarksquark
 def get(file,what,Lfac,lineCol,lineWid,lineSty,fillCol,reb=0):
 	
 	h = file.Get(what)
@@ -28,34 +31,35 @@ def plot(signame,histos,h_legend,minY,maxY,minX,maxX,whatX,whatY,what,c1=0,all=1
         c1.SetLogy(logy) 
 	dum = h_ttbar.Clone()
 	dum.Reset()
-	dum.SetMinimum(minY)
-	dum.SetMaximum(maxY)
 	dum.GetXaxis().SetRangeUser(minX,maxX)
-	dum.GetXaxis().SetTitleSize(0.05)
-	dum.GetYaxis().SetTitleSize(0.05)
-        dum.GetXaxis().SetTitleOffset(0.85)
-        dum.GetYaxis().SetTitleOffset(0.85)
+	dum.GetYaxis().SetRangeUser(minY,maxY)
+	dum.GetXaxis().SetTitleSize(0.06)
+	dum.GetYaxis().SetTitleSize(0.06)
+	dum.GetXaxis().SetLabelSize(0.05)
+	dum.GetYaxis().SetLabelSize(0.05)
+        #dum.GetXaxis().SetTitleOffset(0.85)
+        #dum.GetYaxis().SetTitleOffset(0.85)
 
 	dum.SetXTitle(whatX)
 	dum.SetYTitle(whatY)
 	dum.SetTitle('')
 	dum.SetStats(0)
 	dum.Draw()
-
+        CMS_lumi_v2( c1, 14, 11 )
         tex = TLatex(0.90,0.93,"14 TeV, 3000 fb^{-1}, PU = 140")
         tex.SetNDC()
         tex.SetTextAlign(31)
         tex.SetTextFont(42)
         tex.SetTextSize(0.048)
         tex.SetLineWidth(2)
-        tex.Draw()
+        #tex.Draw()
         tex1 = TLatex(0.15,0.89,"CMS Phase II Simulation")
         tex1.SetNDC()
         tex1.SetTextAlign(13)
         tex1.SetTextFont(61)
         tex1.SetTextSize(0.045)
         tex1.SetLineWidth(2)
-        tex1.Draw()
+        #tex1.Draw()
 	# a legend
 
 	leg = TLegend(0.63,0.525,0.87,0.875) #for 33 TeV (0.65,0.65,0.9,0.9)
@@ -67,13 +71,19 @@ def plot(signame,histos,h_legend,minY,maxY,minX,maxX,whatX,whatY,what,c1=0,all=1
         leg.SetLineWidth(1)
         leg.SetFillColor(0)
         leg.SetFillStyle(1001)
+        if all == 1:
+                leg.SetHeader('Model: '+signame+ ' not stacked')
+                leg.AddEntry(h_all,'All','l')
+        if all == 2:
+                leg.SetHeader('Model: '+signame+' stacked')
 
-        leg.SetHeader('Model: '+signame)
-	leg.AddEntry(h_all,'All','l')
+	leg.AddEntry(h_glui,'#tilde{g}#tilde{g}','l')
 	leg.AddEntry(h_stop,'#tilde{t}_{1}#tilde{t}_{1}','l')
 	leg.AddEntry(h_sbot,'#tilde{b}_{1}#tilde{b}_{1}','l')
-	leg.AddEntry(h_glui,'#tilde{g}#tilde{g}','l')
 	leg.AddEntry(h_squarkglui,'#tilde{q}#tilde{g}','l')
+	leg.AddEntry(h_squarksquark,'#tilde{q}#tilde{q}','l')
+
+
 	if all == 1:
 		# bgrd stack
 		stack = THStack('stack','')
@@ -88,17 +98,20 @@ def plot(signame,histos,h_legend,minY,maxY,minX,maxX,whatX,whatY,what,c1=0,all=1
 		# draw bgrds + signals
                 stack.Draw('samehist')
 
-                h_all.Draw('samehist')
+
                 h_stop.Draw('samehist')
                 h_sbot.Draw('samehist')
                 h_glui.Draw('samehist')
                 h_squarkglui.Draw('samehist')
-                
+                h_squarksquark.Draw('samehist')
+                h_all.Draw('samehist')             
                 
                 leg.Draw()
                 c1.RedrawAxis()
+
                 c1.SetName(tev+'_'+pu+'_'+what+'_'+signame+'_notstacked')
                 #c1.SaveAs(dirName+'/'+tev+'_'+pu+'_'+what+'_'+ana+'.pdf')
+                c1.SaveAs(dirName+'/'+tev+'_'+pu+'_'+what+'_'+signame+'_notstacked.pdf')
                 f.cd()
                 c1.Write()
 	if all == 2:
@@ -113,6 +126,7 @@ def plot(signame,histos,h_legend,minY,maxY,minX,maxX,whatX,whatY,what,c1=0,all=1
 			t=h_legend[h]
 			leg.AddEntry(h,t,'f')
 		# draw bgrds + signal
+                stack.Add(h_squarksquark)
                 stack.Add(h_squarkglui)
                 stack.Add(h_sbot)
                 stack.Add(h_stop)
@@ -129,12 +143,13 @@ def plot(signame,histos,h_legend,minY,maxY,minX,maxX,whatX,whatY,what,c1=0,all=1
 			stack_all.Add(h)
 		# draw bgrds + signals
                 stack_all.Add(h_all)
-                stack_all.Draw('samehist')
+
+                #stack_all.Draw('samehist')
                 stack.Draw('samehist')        
                 leg.Draw()
                 c1.RedrawAxis()
                 c1.SetName(tev+'_'+pu+'_'+what+'_'+signame+'_stacked')
-                #c1.SaveAs(dirName+'/'+tev+'_'+pu+'_'+what+'_'+ana+'.pdf')
+                c1.SaveAs(dirName+'/'+tev+'_'+pu+'_'+what+'_'+signame+'_stacked.pdf')
                 f.cd()
                 c1.Write()
 
@@ -153,8 +168,26 @@ base=dirName+'/'+ana+'_'
 #pu  ='50PU' 
 pu ='140PU'
 
-c1=TCanvas('c1','',800,600)
 
+W = 800
+H = 600
+H_ref = 600
+W_ref = 800
+T = 0.08*H_ref
+B = 0.12*H_ref
+L = 0.12*W_ref
+R = 0.04*W_ref
+c1 = TCanvas('c1','c1',10,10,W,H);
+c1.SetFillColor(0);
+c1.SetBorderMode(0);
+c1.SetFrameFillStyle(0);
+c1.SetFrameBorderMode(0);
+c1.SetLeftMargin( L/W );
+c1.SetRightMargin( R/W );
+c1.SetTopMargin( T/H );
+c1.SetBottomMargin( B/H );
+c1.SetTickx(0);
+c1.SetTicky(0);
 #--------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ########## preselection
@@ -165,8 +198,7 @@ label=['H_{T} (GeV)','0JetpT','1JetpT','2JetpT','3JetpT',
 	  'Number of leptons','Leading lepton p_{T} (GeV)',
 	  'Centrality','E_{T}^{miss} (GeV)',
 	  'min ( #Delta #phi(j_{1},E_{T}^{miss}),#Delta #phi(j_{1},E_{T}^{miss}))','M_{T} (GeV)','M^{W}_{T2} (GeV)']
-
-ymax=[4000,2000,2000,2000,2000,20,20,10,10,10,1000,1,1500,3.2,700,500]
+xmax=[7000,2000,2000,2000,2000,20,20,10,10,10,1000,1,1500,3.2,700,500]
 
 cuts=["nocut","1 lepton not cleaned","add. lep veto (not cleaned)", "iso track veto (clean)",
       "nJets >= 3", "nJets >= 4", "nJets >= 5",
@@ -192,8 +224,8 @@ quantity_N1 =["HT_N1_stc","nJet_N1_stc","nBJet_N1_stc","Central_N1_stc","RawMET_
 lable_N1 =["H_{T} (GeV)","Number of jets","Number of b-jets","Centrality","E_{T}^{Miss} (GeV)",
            "min( #Delta #phi(j_{1},E_{T}^{miss}),#Delta #phi(j_{2},E_{T}^{miss}))",
            "M_{T} (GeV)","M^{W}_{T2} (GeV)"]
-xmax_N1 =[4000,20,10,1,2000,3.2,1000,500]
-bin_N1 =['60 GeV','1','1','0.02','40 GeV','0.08','20 GeV','10 GeV']
+xmax_N1 =[5000,20,10,1,2000,3.2,1000,500]
+bin_N1 =['150 GeV','1','1','0.02','40 GeV','0.08','20 GeV','10 GeV']
 
 l=0
 
@@ -207,26 +239,31 @@ file_STOC = [TFile.Open(base+pu+'_STOC_his.root')]
 file_STC = [  TFile.Open(base+pu+'_STCfirst_his.root'),
               TFile.Open(base+pu+'_STCfirst_his_stoponly.root'), 
               TFile.Open(base+pu+'_STCfirst_his_sbotonly.root'), 
-              TFile.Open(base+pu+'_STCfirst_his_gluionly.root'), 
-              TFile.Open(base+pu+'_STCfirst_his_squarkgluionly.root')]
+              TFile.Open(base+pu+'_STCfirst_his_gluionly.root'),
+              TFile.Open(base+pu+'_STCfirst_his_squarkgluionly.root'),
+              TFile.Open(base+pu+'_STCfirst_his_squarksquarkonly.root')]
+
 
 file_NM1 = [  TFile.Open(base+pu+'_NM1_his.root'),
               TFile.Open(base+pu+'_NM1_his_stoponly.root'), 
               TFile.Open(base+pu+'_NM1_his_sbotonly.root'), 
               TFile.Open(base+pu+'_NM1_his_gluionly.root'), 
-              TFile.Open(base+pu+'_NM1_his_squarkgluionly.root')]
+              TFile.Open(base+pu+'_NM1_his_squarkgluionly.root'),
+              TFile.Open(base+pu+'_NM1_his_squarksquarkonly.root')]
 
 file_NM2 = [  TFile.Open(base+pu+'_NM2_his.root'),
               TFile.Open(base+pu+'_NM2_his_stoponly.root'), 
               TFile.Open(base+pu+'_NM2_his_sbotonly.root'), 
               TFile.Open(base+pu+'_NM2_his_gluionly.root'), 
-              TFile.Open(base+pu+'_NM2_his_squarkgluionly.root')]
+              TFile.Open(base+pu+'_NM2_his_squarkgluionly.root'),
+              TFile.Open(base+pu+'_NM2_his_squarksquarkonly.root')]
 
 file_NM3 = [  TFile.Open(base+pu+'_NM3_his.root'),
               TFile.Open(base+pu+'_NM3_his_stoponly.root'), 
               TFile.Open(base+pu+'_NM3_his_sbotonly.root'), 
               TFile.Open(base+pu+'_NM3_his_gluionly.root'), 
-              TFile.Open(base+pu+'_NM3_his_squarkgluionly.root')]
+              TFile.Open(base+pu+'_NM3_his_squarkgluionly.root'),
+              TFile.Open(base+pu+'_NM3_his_squarksquarkonly.root')]
 
 signames = ['STC','NM1','NM2','NM3']
 signalfiles = [file_STC,file_NM1,file_NM2,file_NM3]
@@ -241,10 +278,10 @@ for what in quantity_N1:
         logy = 1
 	if what == 'nJet_N1_stc' or what == 'nBJet_N1_stc' or what == 'mT2W_N1_stc':
 		reb = 0
-        if what == 'dPhi_N1_stc' or  what == 'nJet_N1_stc' or what == 'nBJet_N1_stc' or what == 'Central_N1_stc' :
+        if what == 'dPhi_N1_stc' or  what == 'nBJet_N1_stc' or what == 'Central_N1_stc' :
                 logy = 0
 	if what == 'HT_N1_stc' :
-                reb = 3
+                reb = 15
 	print logy
         h_ttbar = get(file_TTbar, what,Lfac,1,1,1,kAzure-4,reb)
         h_bjets = get(file_BosonJets, what,Lfac,1,1,1,kViolet+5,reb)
@@ -256,30 +293,34 @@ for what in quantity_N1:
 	h_leg={} # entries in legend
 	# bgrds
 	h_ent[h_ttbar]=h_ttbar.Integral(0,5000)
-	h_leg[h_ttbar]='t#bar{t} + jets'
+	h_leg[h_ttbar]='t#bar{t}'
 	#
 	h_ent[h_bjets]=h_bjets.Integral(0,5000)
-	h_leg[h_bjets]='W/Z + jets'
+	h_leg[h_bjets]='V + jets'
 	#
 	h_ent[h_tjets]=h_tjets.Integral(0,5000)
-	h_leg[h_tjets]='Single top + jets'
+	h_leg[h_tjets]='Single top'
 	h_ent[h_dibos]=h_dibos.Integral(0,5000)
-	h_leg[h_dibos]='Diboson'
-	max = h_ttbar.GetMaximum()+h_bjets.GetMaximum()+h_tjets.GetMaximum()+h_dibos.GetMaximum()+h_ttbar.GetMaximum()+100
-	import operator
+	h_leg[h_dibos]='VV'
+	
+
+        import operator
 	sorted_h = sorted(h_ent.iteritems(), key=operator.itemgetter(1))
         
         k=0
         for signal in signalfiles:
-             h_all  = get(signal[0], what,Lfac,kBlack,2,1,0,reb)
-             h_stop  = get(signal[1], what,Lfac,kRed,2,1,0,reb)
-             h_sbot  = get(signal[2], what,Lfac,kBlue,2,1,0,reb)
-             h_glui  = get(signal[3], what,Lfac,kGreen,2,1,0,reb)
-             h_squarkglui  = get(signal[4], what,Lfac,kOrange,2,1,0,reb)
-             
-             plot(signames[k],sorted_h,h_leg,0.1,max,0,xmax_N1[l],lable_N1[l],'Number of events / '+bin_N1[l],what,c1,1,logy)
-             plot(signames[k],sorted_h,h_leg,0.1,max,0,xmax_N1[l],lable_N1[l],'Number of events / '+bin_N1[l],what,c1,2,logy)
-             k=k+1
-	l=l+1
+                h_all  = get(signal[0], what,Lfac,kBlack,2,1,0,reb)                
+                h_stop  = get(signal[1], what,Lfac,kRed,2,1,0,reb)
+                h_sbot  = get(signal[2], what,Lfac,kBlue,2,1,0,reb)
+                h_glui  = get(signal[3], what,Lfac,kGreen+1,2,1,0,reb)
+                h_squarkglui  = get(signal[4], what,Lfac,kOrange,2,1,0,reb)
+                h_squarksquark  = get(signal[5], what,Lfac,kViolet,2,1,0,reb)
+                max = h_all.GetMaximum()+h_ttbar.GetMaximum()+h_bjets.GetMaximum()+h_tjets.GetMaximum()+h_dibos.GetMaximum()+2000
+                print h_stop.Integral(0,5000),h_sbot.Integral(0,5000),h_glui.Integral(0,5000),h_squarkglui.Integral(0,5000),h_squarksquark.Integral(0,5000)
+                print max
+                plot(signames[k],sorted_h,h_leg,0.1,max,0,xmax_N1[l],lable_N1[l],'Events / '+bin_N1[l],what,c1,1,logy)
+                plot(signames[k],sorted_h,h_leg,0.1,max,0,xmax_N1[l],lable_N1[l],'Events / '+bin_N1[l],what,c1,2,logy)
+                k=k+1
+        l=l+1
 	
 	#--------------------------------------------------------------------------------------------------------------------------------------------------------

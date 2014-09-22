@@ -1,13 +1,16 @@
 #!/usr/bin/python
 
 import sys
-from ROOT import TH1D,THStack,TFile,TCanvas,TLegend,kSpring,kBlack,kAzure,kRed,kOrange,kBlue,kCyan,kGreen,kViolet,kPink,TLine,TLatex,kYellow
-#from ROOT import TH1D,THStack,TFile,TCanvas,TLegend,kRed,kOrange,kBlue,kCyan
+from ROOT import *
 
-dirName='September15_noHTcut'
-f = TFile(dirName+"/"+dirName+"_plots_signonly.root", "recreate")
+gROOT.LoadMacro("tdrstyle.C")
+setTDRStyle()
 
-global h_stc,h_stoc,h_nm1,h_nm2,h_nm3,h_stcBkd,h_nm1Bkd,h_nm2Bkd,h_nm3Bkd
+gROOT.LoadMacro("CMS_lumi_v2.C")
+dirName='September18'
+f = TFile(dirName+"/"+dirName+"_plots_allsig.root", "recreate")
+
+global h_stc,h_stoc,h_nm1,h_nm2,h_nm3,h_stcBkd,h_nm1Bkd,h_nm2Bk,h_nm3Bkd
 
 def get(file,what,Lfac,lineCol,lineWid,lineSty,fillCol,reb=0):
 	
@@ -27,15 +30,18 @@ def plot(ana,histos,h_legend,minY,maxY,minX,maxX,whatX,whatY,c1=0,all=1):
 	if c1==0:
 		c1=TCanvas('c1','',800,600)
 	c1.SetLogy() 
+        c1.SetBottomMargin(0.1306294);
 	dum = h_ttbar.Clone()
 	dum.Reset()
 	dum.SetMinimum(minY)
 	dum.SetMaximum(maxY)
 	dum.GetXaxis().SetRangeUser(minX,maxX)
-	dum.GetXaxis().SetTitleSize(0.05)
-	dum.GetYaxis().SetTitleSize(0.05)
-        dum.GetXaxis().SetTitleOffset(0.85)
-        dum.GetYaxis().SetTitleOffset(0.85)
+	dum.GetXaxis().SetTitleSize(0.06)
+	dum.GetYaxis().SetTitleSize(0.06)
+	dum.GetXaxis().SetLabelSize(0.05)
+	dum.GetYaxis().SetLabelSize(0.05)
+        dum.GetXaxis().SetTitleOffset(0.95)
+        #dum.GetYaxis().SetTitleOffset(0.85)
 
 	dum.SetXTitle(whatX)
 	dum.SetYTitle(whatY)
@@ -49,14 +55,15 @@ def plot(ana,histos,h_legend,minY,maxY,minX,maxX,whatX,whatY,c1=0,all=1):
         tex.SetTextFont(42)
         tex.SetTextSize(0.048)
         tex.SetLineWidth(2)
-        tex.Draw()
+        #tex.Draw()
+        CMS_lumi_v2( c1, 14, 11 )
         tex1 = TLatex(0.15,0.89,"CMS Phase II Simulation")
         tex1.SetNDC()
         tex1.SetTextAlign(13)
         tex1.SetTextFont(61)
         tex1.SetTextSize(0.045)
         tex1.SetLineWidth(2)
-        tex1.Draw()
+        #tex1.Draw()
 	# a legend
 
 	leg = TLegend(0.63,0.525,0.87,0.875) #for 33 TeV (0.65,0.65,0.9,0.9)
@@ -128,8 +135,26 @@ base=dirName+'/'+ana+'_'
 #pu  ='NoPU' 
 #pu  ='50PU' 
 pu ='140PU'
-
-c1=TCanvas('c1','',800,600)
+W = 800
+H = 600
+H_ref = 600
+W_ref = 800
+T = 0.08*H_ref
+B = 0.12*H_ref
+L = 0.12*W_ref
+R = 0.04*W_ref
+c1 = TCanvas('c1','c1',10,10,W,H);
+c1.SetFillColor(0);
+c1.SetBorderMode(0);
+c1.SetFrameFillStyle(0);
+c1.SetFrameBorderMode(0);
+c1.SetLeftMargin( L/W );
+c1.SetRightMargin( R/W );
+c1.SetTopMargin( T/H );
+c1.SetBottomMargin( B/H );
+c1.SetTickx(0);
+c1.SetTicky(0);
+#c1=TCanvas('c1','',800,600)
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -168,8 +193,8 @@ quantity_N1 =["HT_N1_stc","nJet_N1_stc","nBJet_N1_stc","Central_N1_stc","RawMET_
 lable_N1 =["H_{T} (GeV)","Number of jets","Number of b-jets","Centrality","E_{T}^{Miss} (GeV)",
            "min( #Delta #phi(j_{1},E_{T}^{miss}),#Delta #phi(j_{2},E_{T}^{miss}))",
            "M_{T} (GeV)","M^{W}_{T2} (GeV)"]
-xmax_N1 =[4000,20,10,1,2000,3.2,1000,500]
-bin_N1 =['60 GeV','1','1','0.02','40 GeV','0.08','20 GeV','10 GeV']
+xmax_N1 =[5000,20,10,1,2000,3.2,1000,500]
+bin_N1 =['150 GeV','1','1','0.02','40 GeV','0.08','20 GeV','10 GeV']
 
 l=0
 
@@ -206,16 +231,17 @@ for what in quantity:
 		h_ent={}
 		h_leg={} # entries in legend
 		# bgrds
-		h_ent[h_ttbar]=h_ttbar.Integral(0,5000)
-		h_leg[h_ttbar]='t#bar{t} + jets'
-		#
-		h_ent[h_bjets]=h_bjets.Integral(0,5000)
-		h_leg[h_bjets]='W/Z + jets'
-		#
-		h_ent[h_tjets]=h_tjets.Integral(0,5000)
-		h_leg[h_tjets]='Single top + jets'
-		h_ent[h_dibos]=h_dibos.Integral(0,5000)
-		h_leg[h_dibos]='Diboson'
+                h_ent[h_ttbar]=h_ttbar.Integral(0,5000)
+                h_leg[h_ttbar]='t#bar{t}'
+                #                                                                                                        
+                h_ent[h_bjets]=h_bjets.Integral(0,5000)
+                h_leg[h_bjets]='V + jets'
+                #                                                                                                        
+                h_ent[h_tjets]=h_tjets.Integral(0,5000)
+                h_leg[h_tjets]='Single top'
+                h_ent[h_dibos]=h_dibos.Integral(0,5000)
+                h_leg[h_dibos]='VV'
+
 		max = h_ttbar.GetMaximum()+h_bjets.GetMaximum()+h_tjets.GetMaximum()+h_dibos.GetMaximum()+h_ttbar.GetMaximum()
                 max = max + 0.1*max
 		import operator
@@ -233,7 +259,7 @@ for what in quantity_N1:
 	if what == 'nJet_N1_stc' or what == 'nBJet_N1_stc' or what == 'mT2W_N1_stc':
 		reb = 0
 	if what == 'HT_N1_stc' :
-                reb = 3
+                reb = 15
 	h_ttbar = get(file_TTbar, what,Lfac,1,1,1,kAzure-4,reb)
         h_bjets = get(file_BosonJets, what,Lfac,1,1,1,kViolet+5,reb)
         h_tjets = get(file_TopJets, what,Lfac,1,1,1,kCyan-6,reb)
@@ -249,19 +275,19 @@ for what in quantity_N1:
 	h_leg={} # entries in legend
 	# bgrds
 	h_ent[h_ttbar]=h_ttbar.Integral(0,5000)
-	h_leg[h_ttbar]='t#bar{t} + jets'
+	h_leg[h_ttbar]='t#bar{t}'
 	#
 	h_ent[h_bjets]=h_bjets.Integral(0,5000)
-	h_leg[h_bjets]='W/Z + jets'
+	h_leg[h_bjets]='V + jets'
 	#
 	h_ent[h_tjets]=h_tjets.Integral(0,5000)
-	h_leg[h_tjets]='single top + jets'
+	h_leg[h_tjets]='Single top'
 	h_ent[h_dibos]=h_dibos.Integral(0,5000)
-	h_leg[h_dibos]='Diboson'
+	h_leg[h_dibos]='VV'
 	max = h_ttbar.GetMaximum()+h_bjets.GetMaximum()+h_tjets.GetMaximum()+h_dibos.GetMaximum()+h_ttbar.GetMaximum()
 	import operator
 	sorted_h = sorted(h_ent.iteritems(), key=operator.itemgetter(1))
-	plot(what,sorted_h,h_leg,0.1,max,0,xmax_N1[l],lable_N1[l],'Number of events / '+bin_N1[l],c1,1)
+	plot(what,sorted_h,h_leg,0.1,max,0,xmax_N1[l],lable_N1[l],'Events / '+bin_N1[l],c1,1)
 	l=l+1
 	
 	#--------------------------------------------------------------------------------------------------------------------------------------------------------
