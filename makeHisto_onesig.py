@@ -37,7 +37,7 @@ def plot(signame,histos,h_legend,minY,maxY,minX,maxX,whatX,whatY,what,c1=0,all=1
 	dum.GetYaxis().SetTitleSize(0.06)
 	dum.GetXaxis().SetLabelSize(0.05)
 	dum.GetYaxis().SetLabelSize(0.05)
-        #dum.GetXaxis().SetTitleOffset(0.85)
+        dum.GetXaxis().SetTitleOffset(0.95)
         #dum.GetYaxis().SetTitleOffset(0.85)
 
 	dum.SetXTitle(whatX)
@@ -224,7 +224,7 @@ quantity_N1 =["HT_N1_stc","nJet_N1_stc","nBJet_N1_stc","Central_N1_stc","RawMET_
 lable_N1 =["H_{T} (GeV)","Number of jets","Number of b-jets","Centrality","E_{T}^{Miss} (GeV)",
            "min( #Delta #phi(j_{1},E_{T}^{miss}),#Delta #phi(j_{2},E_{T}^{miss}))",
            "M_{T} (GeV)","M^{W}_{T2} (GeV)"]
-xmax_N1 =[5000,20,10,1,2000,3.2,1000,500]
+xmax_N1 =[4800,20,10,1,2000,3.2,1000,500]
 bin_N1 =['150 GeV','1','1','0.02','40 GeV','0.08','20 GeV','10 GeV']
 
 l=0
